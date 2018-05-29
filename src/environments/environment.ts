@@ -5,5 +5,5 @@
 
 export const environment = {
   production: false,
-  apiUrl: 'https://data.ratp.fr/api/records/1.0/search',
+  apiUrl: 'https://data.ratp.fr/api/records/1.0',
 };
