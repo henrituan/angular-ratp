@@ -55,16 +55,7 @@ export class DatatableComponent implements OnInit {
       this.getAllSub = this.apiService.get('/search', {...getAllParams, start: 0}).subscribe(
         resp => {
           this.data = new Array<CommercialPlaceInterface>(resp['nhits']); // init array with size of full results
-          resp['records'].map( (item, idx) => {
-            this.data[this.currentIdx] = {
-              label: item.fields.tco_libelle,
-              postalCode: item.fields.code_postal,
-              city: item.fields.ville,
-            }
-            this.currentIdx += 1;
-          });
-          this.dataSource = new MatTableDataSource<CommercialPlaceInterface>(this.data);
-          this.dataSource.paginator = this.paginator;
+          this.mapData(resp['records']);
         },
         err => {
           console.log(err);
@@ -74,26 +65,23 @@ export class DatatableComponent implements OnInit {
 
     pageOnChange(event) {
       this.currentIdx = event.pageIndex * this.pageSize + 1;
-      this.loadData(this.currentIdx);
+      this.getAllSub = this.apiService.get('/search', {...getAllParams, start: this.currentIdx}).subscribe(
+        resp => {
+          this.mapData(resp['records']);
+        },
+        err => {
+          console.log(err);
+        }
+      ); // end subscribe
     } // end pageOnChange
 
     searchTextOnChange(text) {
-      console.log(text);
       this.searchSub = this.apiService.get('/search', {...getAllParams, q: text} ).subscribe(
         resp => {
-          this.data = new Array<CommercialPlaceInterface>(resp['nhits']); // init array with size of full results
-          this.paginator.firstPage();
+          this.data = new Array<CommercialPlaceInterface>(resp['nhits']); // init new array with size of full search results
+          this.paginator.firstPage(); // return to first page
           this.currentIdx = 0;
-          resp['records'].map( (item, idx) => {
-            this.data[this.currentIdx] = {
-              label: item.fields.tco_libelle,
-              postalCode: item.fields.code_postal,
-              city: item.fields.ville,
-            }
-            this.currentIdx += 1;
-          });
-          this.dataSource = new MatTableDataSource<CommercialPlaceInterface>(this.data);
-          this.dataSource.paginator = this.paginator;
+          this.mapData(resp['records']);
         },
         err => {
           console.log(err);
@@ -101,28 +89,56 @@ export class DatatableComponent implements OnInit {
       );
     } // end searchTextOnChange
 
+    sortOnChange(event) {
+
+      const firstIdx = this.paginator.pageIndex*this.paginator.pageSize;
+      const lastIdx = firstIdx+10;
+
+       //  get data currently displaying on table; reserve left part and right part of this.data
+      const leftDataArr: CommercialPlaceInterface[] = this.data.slice(0, firstIdx);
+      const displayedData: CommercialPlaceInterface[] = this.data.slice(firstIdx, lastIdx);
+      const rightDataArr: CommercialPlaceInterface[] = this.data.slice(lastIdx, this.data.length);
+
+      // now sort the displayed data
+      const isAsc = event.direction === 'asc';
+      displayedData.sort((a: CommercialPlaceInterface, b: CommercialPlaceInterface) => {
+         switch (event.active) {
+           case 'label':
+             return this.compare(a.label, b.label, isAsc);
+           case 'city':
+             return this.compare(a.city, b.city, isAsc);
+           case 'postalCode':
+             return this.compare(a.postalCode, b.postalCode, isAsc);
+           default:
+             return 0;
+         }
+      });
+      // concat the 3 data parts and update to matTable
+      this.data = [...leftDataArr, ...displayedData, ...rightDataArr];
+      this.dataSource = new MatTableDataSource<CommercialPlaceInterface>(this.data);
+      this.dataSource.paginator = this.paginator;
+    }
+
+    compare(a, b, isAsc) {
+      return (a < b ? -1 : 1) * (isAsc ? 1 : -1);
+    }
+
+    mapData(jsonRslt) {
+      jsonRslt.map( (item, idx) => {
+        this.data[this.currentIdx] = {
+          label: item.fields.tco_libelle,
+          postalCode: item.fields.code_postal,
+          city: item.fields.ville,
+        }
+        this.currentIdx += 1;
+      });
+      this.dataSource = new MatTableDataSource<CommercialPlaceInterface>(this.data);
+      this.dataSource.paginator = this.paginator;
+    } // end mapdata
+
     ngOnDestroy() {
       this.getAllSub.unsubscribe();
     }
 
-    loadData(startIdx) {
-       this.getAllSub = this.apiService.get('/search', {...getAllParams, start: startIdx}).subscribe(
-        resp => {
-          resp['records'].map( (item, idx) => {
-            this.data[this.currentIdx] = {
-              label: item.fields.tco_libelle,
-              postalCode: item.fields.code_postal,
-              city: item.fields.ville,
-            }
-            this.currentIdx += 1;
-          });
-          this.dataSource = new MatTableDataSource<CommercialPlaceInterface>(this.data);
-          this.dataSource.paginator = this.paginator;
-        },
-        err => {
-          console.log(err);
-        }
-      ); // end subscribe
-    }
 
 }

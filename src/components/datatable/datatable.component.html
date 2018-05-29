@@ -6,7 +6,7 @@
 
 <div class="mat-elevation-z8">
 
-  <mat-table [dataSource]="dataSource" matSort>
+  <mat-table [dataSource]="dataSource" matSort (matSortChange)="sortOnChange($event)">
 
     <ng-container matColumnDef="label">
       <mat-header-cell *matHeaderCellDef mat-sort-header> Libellé </mat-header-cell>
