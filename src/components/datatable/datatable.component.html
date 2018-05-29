@@ -1,0 +1,33 @@
+<div class="example-header">
+  <mat-form-field>
+    <input matInput (keyup)="searchTextOnChange($event.target.value)" placeholder="Chercher">
+  </mat-form-field>
+</div>
+
+<div class="mat-elevation-z8">
+
+  <mat-table [dataSource]="dataSource" matSort>
+
+    <ng-container matColumnDef="label">
+      <mat-header-cell *matHeaderCellDef mat-sort-header> Libellé </mat-header-cell>
+      <mat-cell *matCellDef="let row"> {{row.label}} </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="city">
+      <mat-header-cell *matHeaderCellDef mat-sort-header> Ville </mat-header-cell>
+      <mat-cell *matCellDef="let row"> {{row.city}} </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="postalCode">
+      <mat-header-cell *matHeaderCellDef mat-sort-header> Code postal </mat-header-cell>
+      <mat-cell *matCellDef="let row"> {{row.postalCode}} </mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;">
+    </mat-row>
+  </mat-table>
+
+  <mat-paginator [pageSizeOptions]="[10]" [pageSize]="10"
+                 (page)="pageOnChange($event)"></mat-paginator>
+</div>
